@@ -21,7 +21,7 @@ export async function scoreSmiles(faces: FaceDetectionResult[]): Promise<number>
   let total = 0;
   for (const face of faces) {
     // Expression detection (60% weight)
-    const happy = (face.expressions as Record<string, number>).happy ?? 0;
+    const happy = (face.expressions as unknown as Record<string, number>).happy ?? 0;
 
     // Landmark mouth ratio (40% weight): wider mouth relative to height = bigger smile
     const p = face.landmarks.positions;
