@@ -32,6 +32,7 @@ function scoreForCriterion(key: CriteriaKey, a: PhotoAnalysis): number {
     case 'instagram': return a.instagram;
     case 'bestGroup': return Math.min(100, a.faces.length >= 2 ? 80 + a.lighting * 0.2 : 20);
     case 'bestSolo': return Math.min(100, a.faces.length === 1 ? 80 + a.lighting * 0.2 : 20);
+    // TODO: candid scoring for groups >2 not yet supported — heuristic uses non-smiling + sharp for small groups
     case 'bestCandid': return a.faces.length <= 2 ? (100 - a.smiles) * 0.5 + a.sharpness * 0.5 : 20;
     default: return a.overallScore;
   }
@@ -61,7 +62,9 @@ export function buildRankedResults(
     };
   });
 
-  ranked.sort((a, b) => b.compositeScore - a.compositeScore);
+  ranked.sort((a, b) =>
+    b.compositeScore - a.compositeScore || a.photo.id.localeCompare(b.photo.id)
+  );
 
   const sections: ResultSection[] = [];
 
@@ -76,7 +79,7 @@ export function buildRankedResults(
   const activeCriteria = (Object.keys(CRITERIA_LABELS) as CriteriaKey[]).filter((k) => criteria[k]);
   for (const key of activeCriteria) {
     const sorted = [...ranked].sort(
-      (a, b) => scoreForCriterion(key, b.analysis) - scoreForCriterion(key, a.analysis)
+      (a, b) => scoreForCriterion(key, b.analysis) - scoreForCriterion(key, a.analysis) || a.photo.id.localeCompare(b.photo.id)
     );
     sections.push({
       key,
@@ -87,7 +90,7 @@ export function buildRankedResults(
 
   // Needs Review: bottom 20% (at least 1)
   const needsReview = [...ranked]
-    .sort((a, b) => a.compositeScore - b.compositeScore)
+    .sort((a, b) => a.compositeScore - b.compositeScore || a.photo.id.localeCompare(b.photo.id))
     .slice(0, Math.max(1, Math.ceil(ranked.length * 0.2)));
 
   sections.push({ key: 'needs-review', title: 'Needs Review', photos: needsReview });
