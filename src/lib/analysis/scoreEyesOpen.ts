@@ -43,7 +43,8 @@ export async function scoreEyesOpen(faces: FaceDetectionResult[]): Promise<numbe
   // Real-world EAR: ~0.2–0.3 for open eyes, ~0.1–0.15 for closed.
   // Test fixture landmarks may produce larger EAR values (coords in raw pixels).
   // Logistic: score = 100 / (1 + e^(-k*(EAR - midpoint)))
-  // Midpoint at EAR=0.3, k=10 gives good open/closed separation.
-  const logistic = 100 / (1 + Math.exp(-10 * (avg - 0.3)));
+  // Midpoint at EAR=0.2 (threshold between squinting and open); k=20 for sharp discrimination.
+  // Midpoint at EAR=0.2, k=20 gives good open/closed separation.
+  const logistic = 100 / (1 + Math.exp(-20 * (avg - 0.2)));
   return Math.round(Math.min(100, Math.max(0, logistic)));
 }

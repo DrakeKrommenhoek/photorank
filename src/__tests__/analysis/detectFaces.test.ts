@@ -41,13 +41,17 @@ describe('detectFaces', () => {
     expect(faces[0]).toHaveProperty('detection');
   });
 
-  it('loadModels is idempotent (calling twice does not reload)', async () => {
-    const faceapi = require('face-api.js');
-    faceapi.nets.tinyFaceDetector.loadFromUri.mockClear();
-    await loadModels();
-    await loadModels();
-    // Should only be called once total since models were already loaded
-    // (or zero times if already cached from first test)
-    expect(faceapi.nets.tinyFaceDetector.loadFromUri.mock.calls.length).toBeLessThanOrEqual(1);
+  it('loadModels is idempotent — concurrent calls return the same Promise', async () => {
+    // Use jest.isolateModules to get a fresh module instance (loadingPromise = null)
+    // while keeping the jest.mock('face-api.js') factory in effect.
+    let p1: Promise<void>;
+    let p2: Promise<void>;
+    await jest.isolateModulesAsync(async () => {
+      const { loadModels: freshLoadModels } = await import('@/lib/analysis/detectFaces');
+      p1 = freshLoadModels();
+      p2 = freshLoadModels();
+      expect(p1).toBe(p2); // same Promise object — no double-loading
+      await p1;
+    });
   });
 });
