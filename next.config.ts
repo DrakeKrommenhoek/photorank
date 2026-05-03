@@ -2,15 +2,10 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      // face-api.js uses browser APIs — exclude from server bundle.
-      // Note: this webpack callback applies to `next build` (production).
-      // `next dev` uses Turbopack, but face-api.js is 'use client'-only so no SSR risk there.
-      config.externals = [...(config.externals || []), 'face-api.js'];
-    }
-    return config;
-  },
+  // Exclude face-api.js from SSR bundle — it uses browser-only APIs.
+  // serverExternalPackages works with both Turbopack (next dev/build in Next.js 16)
+  // and webpack, so no bundler-specific callbacks needed.
+  serverExternalPackages: ['face-api.js'],
 };
 
 export default nextConfig;
