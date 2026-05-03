@@ -6,9 +6,9 @@ interface AppState {
   photos: PhotoFile[];
   criteria: SelectedCriteria;
   results: RankedResults | null;
-  favorites: Set<string>;
+  favorites: Record<string, true>;
   isAnalyzing: boolean;
-  analysisProgress: number;
+  analysisProgress: number; // 0–100, shown as progress bar
   addPhotos: (photos: PhotoFile[]) => void;
   removePhoto: (id: string) => void;
   setCriteria: (criteria: Partial<SelectedCriteria>) => void;
@@ -38,7 +38,7 @@ export const useStore = create<AppState>((set) => ({
   photos: [],
   criteria: defaultCriteria,
   results: null,
-  favorites: new Set<string>(),
+  favorites: {},
   isAnalyzing: false,
   analysisProgress: 0,
 
@@ -51,10 +51,10 @@ export const useStore = create<AppState>((set) => ({
   setResults: (results) => set({ results }),
   toggleFavorite: (id) =>
     set((state) => {
-      const favorites = new Set(state.favorites);
-      if (favorites.has(id)) favorites.delete(id);
-      else favorites.add(id);
-      return { favorites };
+      const next = { ...state.favorites };
+      if (next[id]) delete next[id];
+      else next[id] = true;
+      return { favorites: next };
     }),
   setIsAnalyzing: (isAnalyzing) => set({ isAnalyzing }),
   setAnalysisProgress: (analysisProgress) => set({ analysisProgress }),
@@ -63,7 +63,7 @@ export const useStore = create<AppState>((set) => ({
       photos: [],
       criteria: defaultCriteria,
       results: null,
-      favorites: new Set<string>(),
+      favorites: {},
       isAnalyzing: false,
       analysisProgress: 0,
     }),
